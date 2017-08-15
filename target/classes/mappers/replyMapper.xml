@@ -1,0 +1,48 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper  PUBLIC  "-//mybatis.org//DTD Mapper  3.0//EN"
+"http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<!-- sql문만 적어준다. -->
+<!-- id 속성은 sql구문을 구별하는 식별자, parameterType 속성은 sql 실행시 필요한 파라미터 값을 가진 객체 -->
+<!-- resultType 속성은 쿼리문 실행 후 얻어진 결과값을 저장할 객체타입을 지정 -->
+<!-- 객체의 멤버변수의 이름과 쿼리의 파라미터의 이름을 같도록 설정해주면 자동으로 파라미터가 세팅 -->
+<!-- 왜 java.util.Map 과 java.lang.Integer 를 사용하는지 질문 -->
+<!-- CDATA -->
+<!-- sequence -->
+<mapper namespace="ryu.qna.mapper.replymapper">
+	
+	<select id="list" resultType="ryu.qna.commentmodel.QnaCommentDTO">
+		select * from qna_reply where qna_number = #{qna_number} order by qna_reply_number desc
+	</select>
+		
+	<insert id="create">
+		insert into qna_reply (qna_reply_number, qna_number, qna_reply_contents, qna_reply_id) 
+		values(reply_seq.NEXTVAL, #{qna_number},#{qna_reply_contents},#{qna_reply_id})
+	</insert>
+	
+	<update id="update" parameterType="ryu.qna.commentmodel.QnaCommentDTO">
+		update qna_reply set qna_reply_contents = #{qna_reply_contents}, qna_reply_udate=sysdate where qna_reply_number = #{qna_reply_number}
+	</update>
+	
+	<delete id="delete">
+		delete from qna_reply where qna_reply_number=#{qna_reply_number}
+	</delete>
+
+<select id="listPage" resultType="ryu.qna.commentmodel.QnaCommentDTO">
+		<![CDATA[
+  select * from
+  (select rownum rn, qna_reply_number, qna_number, qna_reply_contents, qna_reply_id, qna_reply_wdate, qna_reply_udate 
+  from qna_reply where qna_number = #{qna_number} and rownum <= #{cri.page} * #{cri.perPageNum} order by qna_reply_number desc)
+where rn > (#{cri.page}-1)*#{cri.perPageNum}
+order by qna_reply_number desc
+   ]]> 
+	</select>
+
+	<select id="count" resultType="int">
+		select count(qna_number) from qna_reply where qna_number =#{qna_number}
+	</select>
+
+</mapper>
+	
+	
+<!-- resultType, parameterType 경로 오타 -->
+<!-- SQL문 중 content를 context 로 오타 -->

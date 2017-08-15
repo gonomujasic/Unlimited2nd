@@ -1,0 +1,534 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+"http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="mapper.Point">
+	<select id="getPoint" parameterType="String" resultType="int">
+		select
+		point from member where id=#{id}
+	</select>
+
+	<select id="getMbPointHistory" parameterType="java.util.Map"
+		resultType="min.point.dto.PointHistoryDTO">
+		<![CDATA[
+		select * from(
+		select rownum rnum, 
+		dealing_point, point_before, point_after,
+		dealing_date, opponent, why
+		from ((select 
+		dealing_point, point_before, point_after,
+		dealing_date, opponent, why
+		from buyhistory
+		where id = #{id})
+		union all
+		(select
+		dealing_point, point_before, point_after,
+		dealing_date, opponent, why
+		from sellhistory
+		where id = #{id}) 
+		union all
+		(select
+		dealing_point, point_before, point_after,
+		dealing_date, opponent, why
+		from c_rhistory
+		where id=#{id})
+		order by dealing_date desc))
+		where rnum>=#{paging.startRow} and rnum<=#{paging.endRow} 
+		]]>
+	</select>
+
+	<select id="getSearchPointHistory" parameterType="java.util.Map"
+		resultType="min.point.dto.PointHistoryDTO">
+
+		select * from(
+		select rownum rnum,
+		dealing_point, point_before,
+		point_after,
+		dealing_date, opponent, why
+		from ((select
+		dealing_point,
+		point_before, point_after,
+		dealing_date, opponent, why
+		from buyhistory
+		where id = #{pointSearching.id}
+		<if test="pointSearching.why != ''">
+			and why=#{pointSearching.why}
+		</if>
+		<if test="pointSearching.opponent != ''">
+			and opponent like #{pointSearching.opponent}
+		</if>
+		<if test="pointSearching.from != null">
+		<![CDATA[ and (dealing_date >= #{pointSearching.from}) ]]>
+		</if>
+		<if test="pointSearching.to != null">
+		<![CDATA[
+		and (dealing_date <= #{pointSearching.to})
+		]]>
+		</if>
+		)
+		union all
+		(select
+		dealing_point, point_before, point_after,
+		dealing_date, opponent, why
+		from sellhistory
+		where id =
+		#{pointSearching.id}
+
+		<if test="pointSearching.why != ''">
+			and why=#{pointSearching.why}
+		</if>
+		<if test="pointSearching.opponent != ''">
+			and opponent like #{pointSearching.opponent}
+		</if>
+		<if test="pointSearching.from != null">
+		<![CDATA[ and (dealing_date >= #{pointSearching.from}) ]]>
+		</if>
+		<if test="pointSearching.to != null">
+		<![CDATA[
+		and (dealing_date <= #{pointSearching.to})
+		]]>
+		</if>
+
+
+		)
+		union all
+		(select
+		dealing_point, point_before, point_after,
+		dealing_date,
+		opponent, why
+		from c_rhistory
+		where id=#{pointSearching.id}
+
+		<if test="pointSearching.why != ''">
+			and why=#{pointSearching.why}
+		</if>
+		<if test="pointSearching.opponent != ''">
+			and opponent like #{pointSearching.opponent}
+		</if>
+		<if test="pointSearching.from != null">
+		<![CDATA[ and (dealing_date >= #{pointSearching.from}) ]]>
+		</if>
+		<if test="pointSearching.to != null">
+		<![CDATA[
+		and (dealing_date <= #{pointSearching.to})
+		]]>
+		</if>
+
+		)
+		order by
+		dealing_date desc))
+		<![CDATA[
+		where rnum>=#{paging.startRow} and rnum<=#{paging.endRow} 
+		]]>
+	</select>
+
+
+
+
+
+
+	<select id="getMBHistoryCount" parameterType="String"
+		resultType="int">
+		<![CDATA[
+select sum(r) as total_rows
+from((select count(*) as r from buyhistory where id=#{id}
+) union all 
+(select count(*) as r from sellhistory where id=#{id}
+) union all
+(select count(*) as r from c_rhistory where id=#{id}
+))
+		]]>
+	</select>
+	<select id="getSearchPointHistoryCount" parameterType="min.point.dto.PointSearching"
+		resultType="int">
+		select sum(r) as total_rows
+		from((select count(*) as r from buyhistory
+		where id=#{id}
+		<if test="why != ''">
+			and why=#{why}
+		</if>
+		<if test="opponent != ''">
+			and opponent like #{opponent}
+		</if>
+		<if test="from != null">
+<![CDATA[ and (dealing_date >= #{from}) ]]>
+		</if>
+		<if test="to != null">
+<![CDATA[
+and (dealing_date <= #{to})
+]]>
+		</if>
+
+		) union all
+		(select count(*) as r from sellhistory where id=#{id}
+		<if test="why != ''">
+			and why=#{why}
+		</if>
+		<if test="opponent != ''">
+			and opponent like #{opponent}
+		</if>
+		<if test="from != null">
+<![CDATA[ and (dealing_date >= #{from}) ]]>
+		</if>
+		<if test="to != null">
+<![CDATA[
+and (dealing_date <= #{to})
+]]>
+		</if>
+
+
+		) union all
+		(select count(*) as r from c_rhistory where id=#{id}
+
+		<if test="why != ''">
+			and why=#{why}
+		</if>
+		<if test="opponent != ''">
+			and opponent like #{opponent}
+		</if>
+		<if test="from != null">
+<![CDATA[ and (dealing_date >= #{from}) ]]>
+		</if>
+		<if test="to != null">
+<![CDATA[
+and (dealing_date <= #{to})
+]]>
+		</if>
+
+		))
+
+	</select>
+
+
+	<!-- 테이블 내역 번호들 죄다 no로 고쳐야댐 -->
+	<select id="getNo" resultType="int" parameterType="String">
+		select
+		max(no)
+		from C_RHISTORY
+	</select>
+	<!-- 이것도 DTO 안맞을테고 -->
+	<insert id="insertCR" parameterType="java.util.Map">
+		insert
+		into c_rhistory(no,
+		dealing_point, point_before, point_after,
+		dealing_date, id, why)
+		values(cr_seq.nextval, #{dealing_point}, #{point_before},
+		#{dealing_point}+#{point_before},
+		to_char(sysdate,'YYYY/mm/dd
+		hh24:mi:SS'),#{id}, #{why})
+	</insert>
+
+	<!-- 이것도 안맞을테고 id부분이 -->
+	<update id="pointChange" parameterType="java.util.Map">
+		update
+		member set
+		point=point+#{dealing_point}
+		where id = #{id}
+	</update>
+
+
+	<!-- 이거 dto 새로해줘야댐 -->
+	<insert id="insertRefundRequest" parameterType="min.point.dto.RefundRequestDTO">
+		insert
+		into
+		pointrefundrequest(no, id, dealing_point, done, request_date,
+		refund_bank, refund_accountant)
+		values(refundrequest_seq.nextval,
+		#{id},
+		#{dealing_point}, 'N' ,to_char(sysdate, 'YYYY/mm/dd hh24:mi:SS')
+		,#{refund_bank}, #{refund_accountant})
+	</insert>
+
+	<!-- 역시나 dto -->
+	<select id="getBuyHistory" parameterType="min.util.Paging"
+		resultType="min.point.dto.PointHistoryDTO">
+		select * from(
+		select rownum rnum, no, dealing_point, point_before,
+		point_after,
+		dealing_date, id, opponent from buyhistory
+		order by
+		dealing_date desc) 
+		<![CDATA[ where rnum>= #{startRow} and rnum<= #{endRow}]]>
+	</select>
+
+	<select id="getSearchBuyHistoryCount" parameterType="min.point.dto.PointSearching"
+		resultType="int">
+		select count(*) from buyhistory
+		<where>
+			<if test="opponent != ''">
+				opponent like #{opponent}
+			</if>
+			<if test="from != null">
+		<![CDATA[ and dealing_date >= #{from} ]]>
+			</if>
+			<if test="to != null">
+		<![CDATA[and dealing_date <= #{to}]]>
+			</if>
+			<if test="id != ''">
+				id like #{id}
+			</if>
+		</where>
+	</select>
+
+
+	<select id="getSearchBuyHistory" parameterType="java.util.Map"
+		resultType="min.point.dto.PointHistoryDTO">
+		select * from(
+		select rownum rnum, no, dealing_point, point_before,
+		point_after,
+		dealing_date, id, opponent from buyhistory
+		<where>
+			<if test="pointSearching.opponent != ''">
+				opponent like #{pointSearching.opponent}
+			</if>
+			<if test="pointSearching.from != null">
+		<![CDATA[ and dealing_date >= #{pointSearching.from} ]]>
+			</if>
+			<if test="pointSearching.to != null">
+		<![CDATA[and dealing_date <= #{pointSearching.to}]]>
+			</if>
+			<if test="pointSearching.id != ''">
+				and id like #{pointSearching.id}
+			</if>
+		</where>
+		order by
+		dealing_date desc) 
+		<![CDATA[ where rnum>= #{paging.startRow} and rnum<= #{paging.endRow}]]>
+	</select>
+
+
+
+	<!-- 역시나 dto -->
+	<select id="getSellHistory" parameterType="min.util.Paging"
+		resultType="min.point.dto.PointHistoryDTO">
+		select * from(
+		select rownum rnum, no, dealing_point, point_before,
+		point_after,
+		dealing_date, id, opponent from sellhistory
+		order by
+		dealing_date desc) 
+		<![CDATA[where rnum>= #{startRow} and rnum<= #{endRow}]]>
+	</select>
+
+
+	<!-- 역시나 dto -->
+	<select id="getSearchSellHistory" parameterType="java.util.Map"
+		resultType="min.point.dto.PointHistoryDTO">
+		select * from(
+		select rownum rnum, no, dealing_point, point_before,
+		point_after,
+		dealing_date, id, opponent from sellhistory
+		<where>
+			<if test="pointSearching.opponent != ''">
+				opponent like #{pointSearching.opponent}
+			</if>
+			<if test="pointSearching.from != null">
+		<![CDATA[ and dealing_date >= #{pointSearching.from} ]]>
+			</if>
+			<if test="pointSearching.to != null">
+		<![CDATA[and dealing_date <= #{pointSearching.to}]]>
+			</if>
+			<if test="pointSearching.id != ''">
+				and id like #{pointSearching.id}
+			</if>
+		</where>
+		order by dealing_date desc) 
+		<![CDATA[where rnum>= #{paging.startRow} and rnum<= #{paging.endRow}]]>
+	</select>
+
+
+
+
+	<select id="getSearchSellHistoryCount" parameterType="min.point.dto.PointSearching"
+		resultType="int">
+		select count(*) from sellhistory
+		<where>
+			<if test="opponent != ''">
+				opponent like #{opponent}
+			</if>
+			<if test="from != null">
+		<![CDATA[ and dealing_date >= #{from} ]]>
+			</if>
+			<if test="to != null">
+		<![CDATA[and dealing_date <= #{to}]]>
+			</if>
+			<if test="id != ''">
+				id like #{id}
+			</if>
+		</where>
+
+	</select>
+
+
+	<!-- 역시나 dto -->
+	<select id="getCRHistory" parameterType="min.util.Paging"
+		resultType="min.point.dto.PointHistoryDTO">
+		<![CDATA[
+		select * from(
+		select rownum rnum, no, dealing_point, point_before, point_after,
+		dealing_date, id, opponent from c_rhistory
+		order by dealing_date desc) where rnum>= #{startRow} and rnum<= #{endRow}
+		]]>
+	</select>
+	
+	<select id="getSearchCRHistory" parameterType="java.util.Map"
+		resultType="min.point.dto.PointHistoryDTO">
+		
+		select * from(
+		select rownum rnum, no, dealing_point, point_before, point_after,
+		dealing_date, id, opponent from c_rhistory
+		<where>
+			<if test="pointSearching.why != ''">
+				why like #{pointSearching.why}
+			</if>
+			<if test="pointSearching.from != null">
+		<![CDATA[ and dealing_date >= #{pointSearching.from} ]]>
+			</if>
+			<if test="pointSearching.to != null">
+		<![CDATA[and dealing_date <= #{pointSearching.to}]]>
+			</if>
+			<if test="pointSearching.id != ''">
+				and id like #{pointSearching.id}
+			</if>
+		</where>
+		order by dealing_date desc) 
+		<![CDATA[
+		where rnum>= #{paging.startRow} and rnum<= #{paging.endRow}
+		]]>
+	</select>
+
+
+	<select id="getSearchCRHistoryCount" parameterType="min.point.dto.PointSearching" resultType="int">
+		select count(*) from c_rhistory
+		<where>
+			<if test="why != ''">
+				why like #{why}
+			</if>
+			<if test="from != null">
+		<![CDATA[ and dealing_date >= #{from} ]]>
+			</if>
+			<if test="to != null">
+		<![CDATA[and dealing_date <= #{to}]]>
+			</if>
+			<if test="id != ''">
+				and id like #{id}
+			</if>
+		</where>
+	</select>
+
+
+
+
+	<!-- 환전요청 dto 만들기 -->
+	<select id="getRefundRequestList" parameterType="min.util.Paging"
+		resultType="min.point.dto.RefundRequestDTO">
+		<![CDATA[
+		select * from 
+		(select rownum rnum, no, dealing_point, done, id,
+		request_date, refund_accountant, refund_bank from
+		pointrefundrequest
+		order by request_date desc)
+		where rnum>= #{startRow} and rnum<=#{endRow}
+		]]>
+	</select>
+	
+	
+	<select id="getSearchRefundRequest" parameterType="java.util.Map"
+		resultType="min.point.dto.RefundRequestDTO">
+		select * from 
+		(select rownum rnum, no, dealing_point, done, id,
+		request_date, refund_accountant, refund_bank from
+		pointrefundrequest
+		<where>
+			<if test="pointSearching.done != ''">
+				done like #{pointSearching.done}
+			</if>
+			<if test="pointSearching.from != null">
+		<![CDATA[ and dealing_date >= #{pointSearching.from} ]]>
+			</if>
+			<if test="pointSearching.to != null">
+		<![CDATA[and dealing_date <= #{pointSearching.to}]]>
+			</if>
+			<if test="pointSearching.id != ''">
+				and id like #{pointSearching.id}
+			</if>
+		</where>
+		order by request_date desc)
+		<![CDATA[where rnum>= #{paging.startRow} and rnum<=#{paging.endRow}
+		]]>
+	</select>
+
+	<select id="getRefundRequestCount" resultType="int">
+		select count(*)
+		from pointrefundrequest
+	</select>
+	<select id="getSearchRefundRequestCount" parameterType="min.point.dto.PointSearching" resultType="int">
+		select count(*)
+		from pointrefundrequest
+			<where>
+			<if test="done != ''">
+				done like #{done}
+			</if>
+			<if test="from != null">
+		<![CDATA[ and dealing_date >= #{from} ]]>
+			</if>
+			<if test="to != null">
+		<![CDATA[and dealing_date <= #{to}]]>
+			</if>
+			<if test="id != ''">
+				and id like #{id}
+			</if>
+		</where>
+	</select>
+
+	<!-- 테이블에 request_no 를 no로 바꾸기 -->
+	<update id="refundDone" parameterType="int">
+		update
+		pointrefundrequest
+		set done='Y' where no = #{no}
+	</update>
+
+	<!-- 역시나 dto -->
+	<insert id="insertSellHistory" parameterType="min.point.dto.PointHistoryDTO">
+		insert
+		into
+		sellhistory(no, dealing_point, point_before, point_after,
+		dealing_date, opponent, id, why)
+		values(sell_seq.nextval,
+		#{dealing_point},
+		#{point_before}, #{point_before}+#{dealing_point},
+		to_char(sysdate, 'YYYY/mm/dd hh24:mi:SS'),#{opponent}, #{id}, '판매')
+	</insert>
+
+	<!-- 역시나 dto -->
+	<insert id="insertBuyHistory" parameterType="min.point.dto.PointHistoryDTO">
+		insert
+		into
+		buyhistory(no, dealing_point, point_before, point_after,
+		dealing_date,
+		id, opponent, why)
+		values(buy_seq.nextval, #{dealing_point},
+		#{point_before}, #{point_before}+#{dealing_point},
+		to_char(sysdate,
+		'YYYY/mm/dd hh24:mi:SS'),#{opponent}, #{id}, '구매')
+	</insert>
+
+	<select id="getBuyHistoryCount" resultType="int">
+		select count(*) from
+		buyhistory
+	</select>
+
+
+
+
+
+	<select id="getSellHistoryCount" resultType="int">
+		select count(*) from
+		sellhistory
+	</select>
+
+	<select id="getCRHistoryCount" resultType="int">
+		select count(*) from
+		c_rhistory
+	</select>
+
+</mapper>

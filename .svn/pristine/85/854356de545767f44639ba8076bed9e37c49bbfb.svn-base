@@ -1,0 +1,47 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE XML>
+<!-- 작성자 : 김승준 -->
+<!-- 작성일 : 2017-01-13 -->
+
+<!-- 1./webapp/WEB-INF/web.xml에 필터선언 -->
+<!-- 2./webapp/WEB-INF/sitemesh.xml 필터 이름에 맞는 xml 선언 (parser/mapper) -->
+<!-- 3./webapp/WEB-INF/decorators.xml - decorator 꾸미는 jsp 선언 -->
+<!-- 4./webapp/WEB-INF/views/decorator/default_decorator.jsp -->
+
+
+
+<!-- 꾸미기(레이아웃)에 대한 선언 -->
+<decorators defaultdir="/WEB-INF/views/decorator">
+	<!-- hello에 대한 요청이 들어오면 적용시키는 레이아웃 선언 -->
+	<excludes>
+		<pattern>/point/pointExchange*</pattern>
+		<pattern>/rating/Enrollment</pattern>
+		<pattern>/rating/ratingwrite</pattern>
+		<pattern>/member/ChangePw</pattern>
+		<pattern>/chat/chattingRoomPopUp</pattern>
+		<pattern>/chat/chattingRoomPopUp</pattern>
+		<pattern>/chat/makingChattingRoom</pattern>
+	</excludes>
+	
+	<decorator name="main" page="default_decorator.jsp">
+<!-- 		<pattern>/main/*</pattern> -->
+<!-- 		<pattern>/point/*</pattern> -->
+<!-- 		<pattern>/sqna/*</pattern> -->
+<!-- 		<pattern>/snotice/*</pattern> -->
+<!-- 		<pattern>/sstudy/*</pattern> -->
+<!-- 		<pattern>/qna/*</pattern> -->
+<!-- 		<pattern>/login/*</pattern> -->
+<!-- 		<pattern>/member/*</pattern> -->
+<!-- 		<pattern>/mentor/*</pattern> -->
+<!-- 		<pattern>/studypage/*</pattern> -->
+<!-- 		<pattern>/admin/*</pattern> -->
+			<pattern>/*</pattern>
+	</decorator>
+	<!-- <decorator name="admin" page="admin_decorator.jsp"> -->
+	<!-- <pattern>/admin/*</pattern> -->
+	<!-- </decorator> -->
+	<!-- 게시판의 대한 요청 레이아웃 선언 -->
+
+	<!-- 데코레이션에서 제외되는 요청을 선언 -->
+
+</decorators>

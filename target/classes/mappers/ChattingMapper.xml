@@ -1,0 +1,47 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper  PUBLIC  "-//mybatis.org//DTD Mapper  3.0//EN"
+"http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<!-- namespace 속성의 값으로 이름 충돌을 방지 -->
+<mapper namespace="lee.chatting.mapper.ChattingMapper">
+	<!-- id 속성은 sql 문을 구별하는 식별자를 지정. -->
+	<!-- parameterType은 sql 실행시 필요한 파라미터 값을 가진 객체를 지정 -->
+	<!-- resultType 속성은 쿼리문 실행 후 얻어진 결과값을 저장할 객체 타입을 지정 -->
+	<!-- parameterType과 resultType의 차이점 : 파라미터 타입은 실행시 필요한 파라미터를 지정해주며, -->
+	<!-- resultType은 결과 값을 어디에 보낼지 지정함. 보통 select에서 resultType을 사용함 -->
+	<!-- resultType의 값이 객체(ex_ string)일때와 패키지명(ex_hs.spring.board.model.boardDTO)의 
+		차이점 : -->
+	<!-- 결과 값을 보내줄때 하나의 데이터로 보내주게 된다면 그 데이터의 타입으로 지정하고. -->
+	<!-- 전체를 보내준다면 일일이 데이터 타입을 지정하기 보다는 boardDTO로 보내주는게 훨 좋음 -->
+
+<!-- 회원 국적, 언어 찾기 -->
+<select id="loadInfo" parameterType="String" resultType="lee.chatting.dto.MentorInfo">
+SELECT NATION, EDU_LANGUAGE1 FROM MENTOR WHERE ID = #{mentorID}
+</select>
+<!-- 채팅 시작 기록있는지 확인 -->
+<select id="historyOfStartCheck" resultType="int">
+SELECT COUNT(*) FROM LECTURE_HISTORY WHERE CHAT_INDEX = #{roomNum}
+</select>
+<!-- 채팅 종료 기록있는지 확인 -->
+<select id="historyOfEndCheck" resultType="String">
+SELECT END_TIME FROM LECTURE_HISTORY WHERE CHAT_INDEX = #{roomNum}
+</select>
+<!-- 채팅 기록 저장 -->
+<insert id="registHistory" parameterType="lee.chatting.dto.ChatRoomDTO">
+INSERT INTO LECTURE_HISTORY (CHAT_INDEX, START_TIME, EDU_LANG, CHAT_TITLE, ID, MENTOR_ID) 
+VALUES (#{chatRoomNum},SYSDATE,#{language},#{roomTitle},#{menteeID},#{mentorID})
+</insert>
+<!-- 비밀번호 변경 처리 -->
+<update id="endHistory">
+UPDATE LECTURE_HISTORY SET END_TIME = SYSDATE WHERE CHAT_INDEX = #{roomNum}
+</update>
+<!-- 유저 포인트 가져 오기 -->
+<select id="userPoint" resultType="String">
+SELECT POINT FROM MEMBER WHERE ID = #{id}
+</select>
+<!-- 유저 포인트 업데이트 -->
+<update id="updateUserPoint">
+UPDATE MEMBER SET POINT = #{point} WHERE CHAT_INDEX = #{roomNum}
+</update>
+
+
+</mapper>

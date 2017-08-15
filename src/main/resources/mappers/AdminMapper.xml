@@ -1,0 +1,84 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper  PUBLIC  "-//mybatis.org//DTD Mapper  3.0//EN"
+"http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<!-- 20170803정해선 작성 -->
+<!-- namespace 속성의 값으로 이름 충돌을 방지 -->
+<mapper namespace="Admin">
+
+	<!-- 관리자 - 회원검색 클릭시 전체 정보를 불러들임 -->
+	<select id="adminMemberAllList" resultType="hs.member.dto.MemberDTO">
+		select * from member
+		order by name asc
+	</select>
+
+	<!-- 관리자 - 검색 정보 불러들이기 -->
+	<select id="adminSearchMember" resultType="hs.member.dto.MemberDTO">
+		select * from member
+		where 1=1
+		<if test="id!=null">
+			and id like ('%'||#{id}||'%')
+		</if>
+		<if test="email!=null">
+			and email like ('%'||#{email}||'%')
+		</if>
+		<if test="hp!=null">
+			and hp like ('%'||#{hp}||'%')
+		</if>
+		<if test="name!=null">
+			and name like ('%'||#{name}||'%')
+		</if>
+
+
+		<!-- where 1=1 -->
+		<!-- <if test='id!=null and id.equalsIgnoreCase("test")'> -->
+		<!-- and id like ('%||'#{id}||'%') -->
+		<!-- </if> -->
+		<!-- <if test='email!=null and email.equalsIgnoreCase("test")'> -->
+		<!-- and email like ('%||'#{email}||'%') -->
+		<!-- </if> -->
+		<!-- <if test='hp!=null and hp.equalsIgnoreCase("test")'> -->
+		<!-- and hp like ('%||'#{hp}||'%') -->
+		<!-- </if> -->
+		<!-- <if test='name!=null and name.equalsIgnoreCase("test")'> -->
+		<!-- and name like ('%||'#{name}||'%') -->
+		<!-- </if> -->
+
+
+
+
+		<!-- <where> -->
+		<!-- <if test="id!=null"> -->
+		<!-- id like ('%'||#{id}||'%') -->
+		<!-- </if> -->
+		<!-- <if test="email!=null"> -->
+		<!-- and email like ('%'||#{email}||'%') -->
+		<!-- </if> -->
+		<!-- <if test='hp!=null and !hp.equals(" ")'> -->
+		<!-- and hp like ('%||'#{hp}||'%') -->
+		<!-- </if> -->
+		<!-- <if test='name!=null and !name.equals(" ")'> -->
+		<!-- and name like ('%||'#{name}||'%') -->
+		<!-- </if> -->
+		<!-- </where> -->
+
+
+
+		<!-- <trim prefix="WHERE" prefixOverrides="AND"> -->
+		<!-- <if test="id!=null"> -->
+		<!-- id like ('%'||#{id}||'%') -->
+		<!-- </if> -->
+		<!-- <if test="email!=null"> -->
+		<!-- and email like ('%'||#{email}||'%') -->
+		<!-- </if> -->
+		<!-- <if test='hp!=null and !hp.equals(" ")'> -->
+		<!-- hp like ('%||'#{hp}||'%') -->
+		<!-- </if> -->
+		<!-- <if test='name!=null and !name.equals(" ")'> -->
+		<!-- name like ('%||'#{name}||'%') -->
+		<!-- </if> -->
+		<!-- </trim> -->
+		<!-- where id like ('%||'#{id}||'%') -->
+	</select>
+
+
+</mapper>

@@ -1,0 +1,66 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper  PUBLIC  "-//mybatis.org//DTD Mapper  3.0//EN"
+"http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<!-- namespace 속성의 값으로 이름 충돌을 방지 -->
+<mapper namespace="Member">
+	<!-- id 속성은 sql 문을 구별하는 식별자를 지정. -->
+	<!-- parameterType은 sql 실행시 필요한 파라미터 값을 가진 객체를 지정 -->
+	<!-- resultType 속성은 쿼리문 실행 후 얻어진 결과값을 저장할 객체 타입을 지정 -->
+	<!-- parameterType과 resultType의 차이점 : 파라미터 타입은 실행시 필요한 파라미터를 지정해주며, -->
+	<!-- resultType은 결과 값을 어디에 보낼지 지정함. 보통 select에서 resultType을 사용함 -->
+	<!-- resultType의 값이 객체(ex_ string)일때와 패키지명(ex_hs.spring.board.model.boardDTO)의 
+		차이점 : -->
+	<!-- 결과 값을 보내줄때 하나의 데이터로 보내주게 된다면 그 데이터의 타입으로 지정하고. -->
+	<!-- 전체를 보내준다면 일일이 데이터 타입을 지정하기 보다는 boardDTO로 보내주는게 훨 좋음 -->
+
+	<!-- 회원 등록 -->
+	<insert id="memberRegist" parameterType="hs.member.dto.MemberDTO">
+		insert into
+		member(id,password,name,nickName,birth,hp,email,gender,profilePicture)
+		values
+		(#{id},#{password},#{name},#{nickName},#{birth},#{hp},#{email},#{gender},#{profilePicture,jdbcType=VARCHAR})
+	</insert>
+	<!-- 아이디 중복 확인 -->
+	<select id="idCheckProcess" parameterType="hs.member.dto.MemberDTO"
+		resultType="hs.member.dto.MemberDTO">
+		select * from member
+		where id =#{id}
+	</select>
+	
+	
+	<!-- 비밀번호 변경 -->
+	<select id="chkPw" parameterType="java.util.Map" resultType="hs.member.dto.MemberDTO">
+		select id, password from member
+		where id = #{id} and password =
+		#{password}
+	</select>
+	<!-- 회원정보 가져오기 - 수정시 필요 -->
+	<select id="memberDetailInfo" parameterType="hs.member.dto.MemberDTO"
+		resultType="hs.member.dto.MemberDTO">
+		select * from member where id= #{id}
+	</select>
+	<!-- 회원정보 수정처리 -->
+	<update id="memberInfoModify" parameterType="hs.member.dto.MemberDTO">
+		update member set
+		name=#{name}, nickName=#{nickName}, birth=#{birth},
+		hp=#{hp},
+		email=#{email}, profilePicture=#{profilePicture,jdbcType=VARCHAR},
+		introduceMySelf=#{introduceMySelf,jdbcType=VARCHAR}
+		where id=#{id}
+	</update>
+	<!-- 등급번호 업데이트 -->
+	<update id="updateGradeNumber" parameterType="String">
+		update member set grade_number=2 where id=#{id}
+	</update>
+<!-- 	회원 탈퇴 -->
+	<delete id="memberInfoDelete">
+		delete from member where id=#{id}
+	</delete>
+	
+	<!-- 비밀번호 변경 -->
+	<update id="pwChange" parameterType="String">
+	update member set password=#{password} where id=#{id}
+	</update>
+
+	
+</mapper>

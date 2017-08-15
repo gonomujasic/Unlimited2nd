@@ -1,0 +1,35 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper  PUBLIC  "-//mybatis.org//DTD Mapper  3.0//EN"
+"http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<!-- 20170802정해선 작성 -->
+<!-- namespace 속성의 값으로 이름 충돌을 방지 -->
+<mapper namespace="Mentor">
+
+	<!-- 멘토 회원 정보 등록 -->
+	<!-- <insert id="mentorInfoRegist" parameterType="hs.mentor.dto.MentorDTO"> -->
+	<insert id="mentorInfoRegist">
+		insert into
+		mentor(id,nation,edu_language1,edu_language2,edu_language3 )
+		values
+		(#{id},#{nation},#{edu_language1},#{edu_language2,jdbcType=VARCHAR},#{edu_language3,jdbcType=VARCHAR})
+	</insert>
+
+	<!-- 멘토회원정보 수정시 기존 정보 불러들이기 -->
+	<select id="mentorDetailInfo" resultType="hs.mentor.dto.MentorDTO">
+		select * from mentor
+		where id= #{id}
+	</select>
+	<!-- 멘토 회원 정보 수정처리 -->
+	<!-- 최소 1개의 학습 언어는 있어야 하므로 edu_language1 외 나머지는 null 어도됨. -->
+	<!-- 널이어도 되는 값에는 jdbcType=VARCHAR 추가 -->
+	<update id="mentorInfoModify">
+		update mentor set nation=#{nation},
+		edu_language1=#{edu_language1},
+		edu_language2=#{edu_language2,jdbcType=VARCHAR},
+		edu_language3=#{edu_language3,jdbcType=VARCHAR} where id=#{id}
+	</update>
+<!-- 멘토정보 삭제 -->
+	<delete id="mentorInfoDelete">
+		delete from mentor where id=#{id}
+	</delete>
+</mapper>

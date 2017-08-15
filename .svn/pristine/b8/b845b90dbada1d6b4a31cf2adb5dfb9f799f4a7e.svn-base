@@ -1,0 +1,224 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper  PUBLIC  "-//mybatis.org//DTD Mapper  3.0//EN"
+"http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<!-- sql문만 적어준다. -->
+<!-- id 속성은 sql구문을 구별하는 식별자, parameterType 속성은 sql 실행시 필요한 파라미터 값을 가진 객체 -->
+<!-- resultType 속성은 쿼리문 실행 후 얻어진 결과값을 저장할 객체타입을 지정 -->
+<!-- 객체의 멤버변수의 이름과 쿼리의 파라미터의 이름을 같도록 설정해주면 자동으로 파라미터가 세팅 -->
+<!-- 왜 java.util.Map 과 java.lang.Integer 를 사용하는지 질문 -->
+<!-- CDATA -->
+<!-- sequence -->
+<mapper namespace="ryu.study.mapper.Studymapper">
+	<insert id="addAttach">
+	insert into study_attach(fullname, study_number, regdate) values(#{fullname}, study_seq.currval, to_char(sysdate, 'YY-MM-DD HH24:MI:SS'))
+	</insert>
+	<select id="getAttach" resultType="string">
+	select fullname from study_attach where study_number = #{study_number} order by regdate
+	</select>
+	<delete id="deleteAttach">
+	delete from study_attach where study_number = #{study_number}
+	</delete>
+	<insert id="replaceAttach">
+	insert into study_attach(fullname, study_number) values(#{fullName}, #{study_number})
+	</insert>	
+	<insert id="create">
+		insert into study (study_number,id,study_title,study_contents,write_date)
+		values(study_seq.nextval,#{id},#{study_title},#{study_contents},to_char(sysdate, 'YY-MM-DD HH24:MI:SS'))
+	</insert>
+	<update id="cntup">
+		update study set viewcnt=viewcnt+1
+		where study_number =
+		#{study_number}
+	</update>
+
+	<select id="read" resultType="ryu.study.model.StudyDTO">
+		select
+		study_number, study_title, study_contents, id,
+		write_date, viewcnt
+		from
+		study
+		where study_number = #{study_number}
+	</select>
+
+	<update id="update">
+		update study set study_title =#{study_title}, study_contents
+		=#{study_contents}, write_date = to_char(sysdate, 'YY-MM-DD HH24:MI:SS')
+		where study_number = #{study_number}
+	</update>
+
+	<delete id="delete">
+		delete from study where study_number = #{study_number}
+	</delete>
+
+	<select id="listAll" resultType="ryu.study.model.StudyDTO">
+ <![CDATA[
+ select 
+   study_number, study_title, study_contents, id, write_date, viewcnt 
+ from 
+   study 
+ where study_number > 0 
+ order by study_number desc, write_date desc
+ ]]>
+	</select>
+
+	<select id="listPage" resultType="ryu.study.model.StudyDTO">
+ <![CDATA[
+select * 
+from(select study_number 
+, study_title 
+, study_contents 
+, id 
+, write_date 
+, viewcnt 
+, row_number() over(order by study_number desc, write_date desc) rn 
+from study 
+where study_number > 0) 
+where rn BETWEEN #{page} AND #{page}+10
+order by rn
+ ]]>
+	</select>
+
+	<select id="listCriteria" resultType="ryu.study.model.StudyDTO">
+ <![CDATA[
+select * 
+from(select study_number 
+, study_title 
+, study_contents 
+, id 
+, write_date 
+, viewcnt 
+, row_number() over(order by study_number desc, write_date desc) rn 
+from study 
+where study_number > 0) 
+where rn BETWEEN #{page} AND #{page}+#{perPageNum}
+order by rn
+
+ ]]>
+	</select>
+
+
+
+	<select id="countPaging" resultType="int">
+ <![CDATA[
+ select 
+   count(study_number) 
+ from 
+   study 
+ where 
+   study_number > 0 
+ ]]>
+	</select>
+
+
+
+	<sql id="search1">
+		<if test="searchType == null">
+
+		</if>
+		<if test="searchType != null">
+
+			<if test="searchType == 't'.toString()">
+				and study_title like ('%'|| #{keyword}|| '%')
+			</if>
+			<if test="searchType == 'c'.toString()">
+				and study_contents like ('%'|| #{keyword}|| '%')
+			</if>
+			<if test="searchType == 'w'.toString()">
+				and id like ('%'|| #{keyword}|| '%')
+			</if>
+			<if test="searchType == 'tc'.toString()">
+				and ( study_title like ('%'|| #{keyword}|| '%') OR study_contents like
+				('%'||
+				#{keyword}|| '%'))
+			</if>
+			<if test="searchType == 'cw'.toString()">
+				and ( study_contents like ('%'|| #{keyword}|| '%') OR id
+				like ('%'||
+				#{keyword}|| '%'))
+			</if>
+			<if test="searchType == 'tcw'.toString()">
+				and ( study_title like ('%'|| #{keyword}|| '%')
+				OR
+				study_contents like
+				('%'|| #{keyword}|| '%')
+				OR
+				id like ('%'|| #{keyword}|| '%'))
+			</if>
+		</if>
+	</sql>
+
+	<sql id="search">
+		<if test="searchType == null">
+			) where study_number > 0
+		</if>
+
+		<if test="searchType == ''.toString()">
+			and study_title like ('%'|| #{keyword}|| '%')) where study_number > 0
+		</if>
+		<if test="searchType == 't'.toString()">
+			and study_title like ('%'|| #{keyword}|| '%')) where study_number > 0
+		</if>
+		<if test="searchType == 'c'.toString()">
+			and study_contents like ('%'|| #{keyword}|| '%')) where study_number > 0
+		</if>
+		<if test="searchType == 'w'.toString()">
+			and id like ('%'|| #{keyword}|| '%')) where study_number > 0
+		</if>
+		<if test="searchType == 'tc'.toString()">
+			and ( study_title like ('%'|| #{keyword}|| '%') OR study_contents like ('%'||
+			#{keyword}|| '%'))) where study_number > 0
+		</if>
+		<if test="searchType == 'cw'.toString()">
+			and ( study_contents like ('%'|| #{keyword}|| '%') OR id like ('%'||
+			#{keyword}|| '%'))) where study_number > 0
+		</if>
+		<if test="searchType == 'tcw'.toString()">
+			and ( study_title like ('%'|| #{keyword}|| '%')
+			OR
+			study_contents like ('%'|| #{keyword}|| '%')
+			OR
+			id like ('%'|| #{keyword}|| '%'))) where study_number > 0
+		</if>
+
+	</sql>
+
+
+	<select id="listSearch" resultType="ryu.study.model.StudyDTO">
+<![CDATA[ 
+select * 
+from(select study_number
+, study_title
+, study_contents
+, id
+, write_date
+, viewcnt
+, row_number() over(order by study_number desc) rn
+from study
+where study_number > 0
+]]>
+
+		<include refid="search"></include>
+  
+<![CDATA[    
+AND rn BETWEEN #{page} AND #{page}+#{perPageNum}
+order by rn
+
+
+]]>
+	</select>
+
+	<select id="listSearchCount" resultType="int">
+<![CDATA[  
+  select count(study_number) 
+  from study 
+  where study_number > 0 
+]]>
+		<include refid="search1"></include>
+
+	</select>
+	
+</mapper>
+	
+	
+<!-- resultType, parameterType 경로 오타 -->
+<!-- SQL문 중 content를 context 로 오타 -->

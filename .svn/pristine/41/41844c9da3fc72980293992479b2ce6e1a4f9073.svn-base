@@ -1,0 +1,224 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper  PUBLIC  "-//mybatis.org//DTD Mapper  3.0//EN"
+"http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<!-- sql문만 적어준다. -->
+<!-- id 속성은 sql구문을 구별하는 식별자, parameterType 속성은 sql 실행시 필요한 파라미터 값을 가진 객체 -->
+<!-- resultType 속성은 쿼리문 실행 후 얻어진 결과값을 저장할 객체타입을 지정 -->
+<!-- 객체의 멤버변수의 이름과 쿼리의 파라미터의 이름을 같도록 설정해주면 자동으로 파라미터가 세팅 -->
+<!-- 왜 java.util.Map 과 java.lang.Integer 를 사용하는지 질문 -->
+<!-- CDATA -->
+<!-- sequence -->
+<mapper namespace="ryu.notice.mapper.Noticemapper">
+	<insert id="addAttach">
+	insert into notice_attach(fullname, notice_number, regdate) values(#{fullname}, notice_seq.currval, to_char(sysdate, 'YY-MM-DD HH24:MI:SS'))
+	</insert>
+	<select id="getAttach" resultType="string">
+	select fullname from notice_attach where notice_number = #{notice_number} order by regdate
+	</select>
+	<delete id="deleteAttach">
+	delete from notice_attach where notice_number = #{notice_number}
+	</delete>
+	<insert id="replaceAttach">
+	insert into notice_attach(fullname, notice_number) values(#{fullName}, #{notice_number})
+	</insert>	
+	<insert id="create">
+		insert into notice (notice_number,id,notice_title,notice_contents,write_date)
+		values(notice_seq.nextval,#{id},#{notice_title},#{notice_contents},to_char(sysdate, 'YY-MM-DD HH24:MI:SS'))
+	</insert>
+	<update id="cntup">
+		update notice set viewcnt=viewcnt+1
+		where notice_number =
+		#{notice_number}
+	</update>
+
+	<select id="read" resultType="ryu.notice.model.NoticeDTO">
+		select
+		notice_number, notice_title, notice_contents, id,
+		write_date, viewcnt
+		from
+		notice
+		where notice_number = #{notice_number}
+	</select>
+
+	<update id="update">
+		update notice set notice_title =#{notice_title}, notice_contents
+		=#{notice_contents}, write_date = to_char(sysdate, 'YY-MM-DD HH24:MI:SS')
+		where notice_number = #{notice_number}
+	</update>
+
+	<delete id="delete">
+		delete from notice where notice_number = #{notice_number}
+	</delete>
+
+	<select id="listAll" resultType="ryu.notice.model.NoticeDTO">
+ <![CDATA[
+ select 
+   notice_number, notice_title, notice_contents, id, write_date, viewcnt 
+ from 
+   notice 
+ where notice_number > 0 
+ order by notice_number desc, write_date desc
+ ]]>
+	</select>
+
+	<select id="listPage" resultType="ryu.notice.model.NoticeDTO">
+ <![CDATA[
+select * 
+from(select notice_number 
+, notice_title 
+, notice_contents 
+, id 
+, write_date 
+, viewcnt 
+, row_number() over(order by notice_number desc, write_date desc) rn 
+from notice 
+where notice_number > 0) 
+where rn BETWEEN #{page} AND #{page}+10
+order by rn
+ ]]>
+	</select>
+
+	<select id="listCriteria" resultType="ryu.notice.model.NoticeDTO">
+ <![CDATA[
+select * 
+from(select notice_number 
+, notice_title 
+, notice_contents 
+, id 
+, write_date 
+, viewcnt 
+, row_number() over(order by notice_number desc, write_date desc) rn 
+from notice 
+where notice_number > 0) 
+where rn BETWEEN #{page} AND #{page}+#{perPageNum}
+order by rn
+
+ ]]>
+	</select>
+
+
+
+	<select id="countPaging" resultType="int">
+ <![CDATA[
+ select 
+   count(notice_number) 
+ from 
+   notice 
+ where 
+   notice_number > 0 
+ ]]>
+	</select>
+
+
+
+	<sql id="search1">
+		<if test="searchType == null">
+
+		</if>
+		<if test="searchType != null">
+
+			<if test="searchType == 't'.toString()">
+				and notice_title like ('%'|| #{keyword}|| '%')
+			</if>
+			<if test="searchType == 'c'.toString()">
+				and notice_contents like ('%'|| #{keyword}|| '%')
+			</if>
+			<if test="searchType == 'w'.toString()">
+				and id like ('%'|| #{keyword}|| '%')
+			</if>
+			<if test="searchType == 'tc'.toString()">
+				and ( notice_title like ('%'|| #{keyword}|| '%') OR notice_contents like
+				('%'||
+				#{keyword}|| '%'))
+			</if>
+			<if test="searchType == 'cw'.toString()">
+				and ( notice_contents like ('%'|| #{keyword}|| '%') OR id
+				like ('%'||
+				#{keyword}|| '%'))
+			</if>
+			<if test="searchType == 'tcw'.toString()">
+				and ( notice_title like ('%'|| #{keyword}|| '%')
+				OR
+				notice_contents like
+				('%'|| #{keyword}|| '%')
+				OR
+				id like ('%'|| #{keyword}|| '%'))
+			</if>
+		</if>
+	</sql>
+
+	<sql id="search">
+		<if test="searchType == null">
+			) where notice_number > 0
+		</if>
+
+		<if test="searchType == ''.toString()">
+			and notice_title like ('%'|| #{keyword}|| '%')) where notice_number > 0
+		</if>
+		<if test="searchType == 't'.toString()">
+			and notice_title like ('%'|| #{keyword}|| '%')) where notice_number > 0
+		</if>
+		<if test="searchType == 'c'.toString()">
+			and notice_contents like ('%'|| #{keyword}|| '%')) where notice_number > 0
+		</if>
+		<if test="searchType == 'w'.toString()">
+			and id like ('%'|| #{keyword}|| '%')) where notice_number > 0
+		</if>
+		<if test="searchType == 'tc'.toString()">
+			and ( notice_title like ('%'|| #{keyword}|| '%') OR notice_contents like ('%'||
+			#{keyword}|| '%'))) where notice_number > 0
+		</if>
+		<if test="searchType == 'cw'.toString()">
+			and ( notice_contents like ('%'|| #{keyword}|| '%') OR id like ('%'||
+			#{keyword}|| '%'))) where notice_number > 0
+		</if>
+		<if test="searchType == 'tcw'.toString()">
+			and ( notice_title like ('%'|| #{keyword}|| '%')
+			OR
+			notice_contents like ('%'|| #{keyword}|| '%')
+			OR
+			id like ('%'|| #{keyword}|| '%'))) where notice_number > 0
+		</if>
+
+	</sql>
+
+
+	<select id="listSearch" resultType="ryu.notice.model.NoticeDTO">
+<![CDATA[ 
+select * 
+from(select notice_number
+, notice_title
+, notice_contents
+, id
+, write_date
+, viewcnt
+, row_number() over(order by notice_number desc) rn
+from notice
+where notice_number > 0
+]]>
+
+		<include refid="search"></include>
+  
+<![CDATA[    
+AND rn BETWEEN #{page} AND #{page}+#{perPageNum}
+order by rn
+
+
+]]>
+	</select>
+
+	<select id="listSearchCount" resultType="int">
+<![CDATA[  
+  select count(notice_number) 
+  from notice 
+  where notice_number > 0 
+]]>
+		<include refid="search1"></include>
+
+	</select>
+	
+</mapper>
+	
+	
+<!-- resultType, parameterType 경로 오타 -->
+<!-- SQL문 중 content를 context 로 오타 -->

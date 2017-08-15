@@ -1,0 +1,216 @@
+package lee.chatting.controller;
+
+import java.util.ArrayList;
+import java.util.List;
+
+import javax.servlet.http.HttpServletRequest;
+
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.messaging.handler.annotation.DestinationVariable;
+import org.springframework.messaging.handler.annotation.MessageMapping;
+import org.springframework.messaging.simp.SimpMessagingTemplate;
+import org.springframework.stereotype.Controller;
+import org.springframework.transaction.annotation.Transactional;
+import org.springframework.ui.Model;
+import org.springframework.web.bind.annotation.PathVariable;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestMethod;
+import org.springframework.web.bind.annotation.RequestParam;
+import org.springframework.web.bind.annotation.ResponseBody;
+
+import kjy.rating_history.dto.AvgDTO;
+import kjy.rating_history.service.RatingHistoryEnrollment;
+import lee.chatting.dto.ChatNotice;
+import lee.chatting.dto.ChatRoomDTO;
+import lee.chatting.dto.Message;
+import lee.chatting.dto.OutputMessage;
+import lee.chatting.dto.UserPoint;
+import lee.chatting.service.ChatService;
+import lee.chatting.service.DisconnectService;
+import lee.chatting.service.EnterChatService;
+import lee.chatting.service.LectureHistoryService;
+import lee.chatting.service.LoadListAnno;
+import lee.chatting.service.LoadMentorInfoAnno;
+import lee.chatting.service.MakeNewChatAnno;
+import min.point.controller.PointController;
+import min.point.service.PointService;
+
+@Controller
+@RequestMapping("/chat")
+public class ChattingController {
+
+	private SimpMessagingTemplate template;
+
+	@Autowired
+	RatingHistoryEnrollment ra;
+
+	@Autowired
+	@MakeNewChatAnno
+	private ChatService makeChatService;
+
+	@Autowired
+	@LoadListAnno
+	private ChatService LoadListService;
+
+	@Autowired
+	@LoadMentorInfoAnno
+	private ChatService LoadMentorInfoService;
+
+	@Autowired
+	private EnterChatService enterChatService;
+
+	@Autowired
+	private LectureHistoryService lectureHistoryService;
+
+	@Autowired
+	private PointService pointService;
+	
+	@Autowired
+	private ArrayList<ChatRoomDTO> list;
+	
+	@Autowired
+	private DisconnectService disconnectService;
+	
+	@Autowired
+	public void GreetingController(SimpMessagingTemplate template) {
+		this.template = template;
+	}
+
+	@MessageMapping("/chat/{roomNumber}") // 리퀘스트 맵핑과 상관없음.
+	public void send(@DestinationVariable("roomNumber") String roomNumber, Message message) {
+		System.out.println("여기 들어오닝" + message.toString());
+		OutputMessage outputMessage = new OutputMessage(message.getFrom(), message.getText(), roomNumber);
+		this.template.convertAndSend("/subscribe/room/" + roomNumber, outputMessage);
+	}
+
+	@MessageMapping("/chat/first/{roomNumber}")
+	public void firstSend(@DestinationVariable("roomNumber") String roomNumber, Message message) {
+		System.out.println("퍼스트 들어오나?");
+		String str = message.getFrom() + " 님이 입장하셨습니다.";
+		this.template.convertAndSend("/subscribe/notice/room/" + roomNumber, new ChatNotice(str));
+	}
+	
+	@MessageMapping("/chat/lecture/{roomNumber}")
+	public void lectureStart(@DestinationVariable("roomNumber") String roomNumber, Message message) {
+		System.out.println("렉처 시작 들어오나?");
+		String str = message.getText();
+		String notice;
+		if(str.equals("start")){
+			notice = "# "+message.getFrom()+" 님께서 강의 시작 버튼을 눌렀습니다.";
+			System.out.println(notice);
+		} else{
+			notice = "! " +message.getFrom()+" 님께서 강의 종료 버튼을 눌렀습니다."; 
+			System.out.println(notice);
+		}
+		this.template.convertAndSend("/subscribe/lecture/room/" + roomNumber, new ChatNotice(notice));
+	}
+	 
+	// 채팅룸 리스트 호출
+	@RequestMapping(value = "/chattingRoomList")
+	public String requestChattingRoomList(Model model, HttpServletRequest request) {
+		model = LoadListService.execute(model, request);
+		List<AvgDTO>list2= ra.getAvg();
+		System.out.println(list2);
+		model.addAttribute("ranklist",list2);
+		return "chat/chattingRoomList";
+	}
+
+	// 채팅방 만들기 팝업 호출 및 멘토 정보 받아오기
+	@RequestMapping(value = "/chattingRoomPopUp")
+	public String requestChattingRoomPopUp(Model model, HttpServletRequest request) {
+		model = LoadMentorInfoService.execute(model, request);
+		return "chat/makeNewChatRoom";
+	}
+
+	// 채팅룸 만들기 호출
+	@RequestMapping(value = "/makingChattingRoom", method = RequestMethod.POST)
+	public String requestMakingChattingRoom(Model model, HttpServletRequest request) {
+
+		model = makeChatService.execute(model, request);
+
+		return "chat/chattingRoom";
+	}
+
+	// 채팅룸 들어가기
+	@RequestMapping(value = "/enterChattingRoom")
+	public String requestEnterChattingRoom(@RequestParam("roomNumber") String roomNumber, Model model,
+			HttpServletRequest request) {
+
+		model = enterChatService.execute(model, request, roomNumber);
+
+		return "chat/chattingRoom";
+	}
+
+	// 강의 시작 버튼 클릭시
+	@ResponseBody
+	@RequestMapping(value = "/startLecture")
+	public String requestStartLecture(@RequestParam("roomNumber") String roomNumber) {
+		boolean isSuccess = false;
+
+		if (lectureHistoryService.historyOfStartCheck(roomNumber) == true) {
+
+			isSuccess = lectureHistoryService.registHistory(roomNumber);
+
+			if (isSuccess == true) {
+				return "success";
+			} else {
+				return "fail";
+			}
+		} else {
+			return "alreadyIn";
+		}
+
+	}
+
+	// 강의 종료 버튼 클릭시
+	@ResponseBody
+	@RequestMapping(value = "/endLecture")
+	@Transactional
+	public String requestEndLecture(@RequestParam("roomNumber") String roomNumber,
+			@RequestParam double dealingPoint) {
+		boolean isSuccess = false;
+		
+		double dealing_point = dealingPoint;
+		
+		if(lectureHistoryService.historyOfEndCheck(roomNumber)){
+			isSuccess = lectureHistoryService.endHistory(roomNumber);
+			
+			String mentorID = null;
+			String menteeID = null;
+
+			int roomNum = Integer.parseInt(roomNumber);
+
+			for (ChatRoomDTO selectChatRoom : list) {
+
+				if (roomNum == selectChatRoom.getChatRoomNum()) {
+
+					mentorID = selectChatRoom.getMentorID();
+					menteeID = selectChatRoom.getMenteeID();
+				}
+
+			}
+		
+			pointService.pointExchange(menteeID, mentorID, dealing_point);
+			return "success";
+		} else{
+			return "alreadyIn";
+		}
+		
+	}
+	
+	// 강의 시작 버튼 클릭시
+	@ResponseBody
+	@RequestMapping(value = "/disconnect")
+	public String requestDisconnect(@RequestParam("roomNumber") String roomNumber,
+			@RequestParam("nickName") String nickName) {
+		
+System.out.println(nickName);
+		//해당 유저 채팅룸에서 빼기
+		String user = disconnectService.disconnect(roomNumber, nickName);
+		//새창 열어 평판으로 이동 시키기. 
+		System.out.println(user);
+		return user;
+
+	}
+
+}

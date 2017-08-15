@@ -1,0 +1,204 @@
+package min.point.controller;
+
+import java.util.Map;
+
+import javax.servlet.http.HttpServletRequest;
+import javax.servlet.http.HttpSession;
+
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.stereotype.Controller;
+import org.springframework.ui.Model;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestMethod;
+import org.springframework.web.bind.annotation.RequestParam;
+
+import min.point.dto.PointChargeDTO;
+import min.point.dto.PointSearching;
+import min.point.dto.RefundRequestDTO;
+import min.point.service.PointService;
+
+@Controller
+@RequestMapping("/point")
+public class PointController {
+	
+	@Autowired
+	PointService pointService;
+	
+	//세션에서 아이디 가져오고 아이디로 db에서 포인트를 조회함
+	@RequestMapping("/pointMain")
+	public String PointMain(HttpServletRequest request, Model model){
+		HttpSession session = request.getSession();
+		String id = (String) session.getAttribute("id");
+		int point = pointService.getPoint(id);
+		model.addAttribute("id", id);
+		model.addAttribute("point",point);
+		return "point/point_main";
+	}
+	
+	//관리자님!
+	@RequestMapping("/pointAdmin")
+	public String PointAdmin(){
+		return "point/point_admin";
+	}
+	
+	//관리자가 회원들의 포인트내역  구매, 판매, 충환 구분해서 불러오는 페이지로 이동
+	@RequestMapping("/adminHistory")
+	public String AdminHistory(){
+		return "point/point_admin_history";
+	}
+	
+	//관리자가 모든 회원 구매내역 조회하기
+	@RequestMapping("/getBuyHistory")
+	public String GetBuyHistory(Model model, @RequestParam(value="page", defaultValue="1")int page){
+		Map<String, Object> map = pointService.getBuyHistory(page);
+		model.addAttribute("list",map.get("list"));
+		model.addAttribute("paging",map.get("paging"));
+		return "point/buy_history";
+		//관리자가 회원들의 포인트내역  구매, 판매, 충환 구분해서 불러오기
+	}
+	
+	//관리자가 모든회원 판매내역 조회하기
+	@RequestMapping("/getSellHistory")
+	public String GetSellHistory(Model model, @RequestParam(value="page", defaultValue="1")int page){
+		Map<String, Object> map = pointService.getSellHistory(page);
+		model.addAttribute("list",map.get("list"));
+		model.addAttribute("paging",map.get("paging"));
+		return "point/sell_history";
+	}
+	
+	//관리자가 모든 회원 충전, 환전 내역 조회하기
+	@RequestMapping("/getCRHistory")
+	public String GetCRHistory(Model model, @RequestParam(value="page", defaultValue="1")int page){
+		Map<String, Object> map = pointService.getCRHistory(page);
+		model.addAttribute("list",map.get("list"));
+		model.addAttribute("paging",map.get("paging"));
+		return "point/cr_history";
+	}
+	
+	//회원이 자기 포인트 내역 보기
+	@RequestMapping("/GetPointHistory")
+	public String GetPointHistory(@RequestParam("id") String id, @RequestParam(value="page",defaultValue="1") int page, Model model){
+		System.out.println(id);
+		Map<String, Object> map = pointService.getPointHistory(page,id);
+		model.addAttribute("id",id);
+		model.addAttribute("pointHistoryList",map.get("list"));
+		model.addAttribute("paging",map.get("paging"));
+		return "point/point_history";
+	}
+	
+	//관리자가 환전요청내역을 보기
+	@RequestMapping("/getRefundRequestList")
+	public String GetRefundRequest(Model model, @RequestParam(value="page", defaultValue="1")int page){
+		Map<String, Object> map = pointService.getRefundRequestList(page);
+		model.addAttribute("list", map.get("list"));
+		model.addAttribute("paging", map.get("paging"));
+		return "point/refund_request";
+	}
+	
+	//포인트 충전하기 폼으로
+	@RequestMapping(value="/pointcharge", method=RequestMethod.GET)
+	public String PointChargeForm(){
+		return "point/point_charge_form";
+	}
+	
+	//포인트 충전폼에서 받은 값들 아임포트 api에 넣어주기
+	@RequestMapping(value="/pointchargeimport", method=RequestMethod.POST)
+	public String PointChargeimport(PointChargeDTO pointChargeDTO, Model model){
+		model.addAttribute("param",pointChargeDTO);
+		return "point/point_charge_import";
+	}
+	
+	//아임포트에서 결제 끝나면 db수정하기
+	@RequestMapping(value="/pointcharge", method=RequestMethod.POST)
+	public String PointCharge(@RequestParam(value="id",defaultValue="bravivi") String id, @RequestParam("dealing_point") int dealing_point){
+		pointService.pointCharge(id, dealing_point);
+		
+		return "redirect:../point/pointMain";
+	}
+	
+	//포인트 거래하고 평점 넣는쪽으로
+	@RequestMapping("/pointExchange")
+	public String PointExchange(Model model, @RequestParam("buyer") String buyer, @RequestParam("seller") String seller, @RequestParam("dealing_point") double dealing_point){
+		pointService.pointExchange(buyer,seller,dealing_point);
+		model.addAttribute("mentor_id",seller);
+		model.addAttribute("buyer", buyer);
+		return "rating_history/ratingwrite";
+	}
+	
+	//id로 포인트 조회하고 포인트 환전 폼으로
+	@RequestMapping(value="/pointRefundRequest", method=RequestMethod.GET)
+	public String PointRequestForm(HttpServletRequest request, Model model){
+		HttpSession session = request.getSession();
+		String id = (String) session.getAttribute("id");
+		int point = pointService.getPoint(id);
+		model.addAttribute("point",point);
+		model.addAttribute("id",id);
+		return "point/point_refund_form";
+	}
+
+	//환전폼에서 넣은 정보 DTO로 받고 환전요청 테이블에 삽입
+	@RequestMapping(value="/pointRefundRequest", method=RequestMethod.POST)
+	public String PointRequest(RefundRequestDTO refundRequestDTO){
+		System.out.println(refundRequestDTO);
+		pointService.refundRequest(refundRequestDTO);
+		return "redirect:pointMain";
+	}
+	
+	//관리자가 포인트 환전 체크
+	@RequestMapping("/pointRefundRequestCheck")
+	public String PointRefundRequestCheck(@RequestParam("no") int no, @RequestParam("id")String id ,@RequestParam("dealing_point") double dealing_point){
+		pointService.refundRequestCheck(no,id,dealing_point);
+		return "redirect:./getRefundRequestList";
+	}
+	
+	//회원이 자기 포인트 내역 검색
+	@RequestMapping(value="/pointHistorySearch",method=RequestMethod.POST)
+	public String PointHistorySearch(@RequestParam(value="page",defaultValue="1") int page, HttpServletRequest request, PointSearching pointSearching, Model model){
+		HttpSession session = request.getSession();
+		String id = (String)session.getAttribute("id");
+		pointSearching.setId(id);
+		System.out.println(pointSearching);
+		Map<String, Object> map = pointService.pointHistorySearch(page, pointSearching);
+		model.addAttribute("pointHistoryList", map.get("list"));
+		model.addAttribute("paging",map.get("paging"));
+		model.addAttribute("id",id);
+		return "point/point_history";
+	}
+	
+	//관리자가 모든 회원들의 구매내역 검색
+	@RequestMapping(value="buyHistorySearch", method=RequestMethod.POST)
+	public String BuyHistorySearch(@RequestParam(value="page",defaultValue="1") int page, PointSearching pointSearching, Model model){
+		Map<String, Object> map = pointService.buyHistorySearch(page, pointSearching);
+		model.addAttribute("list",map.get("list"));
+		model.addAttribute("paging",map.get("paging"));
+		return "point/buy_history";
+	}
+	
+	//관리자가 모든 회원들의 판매내역 검색
+	@RequestMapping(value="sellHistorySearch", method=RequestMethod.POST)
+	public String SellHistorySearch(@RequestParam(value="page",defaultValue="1") int page, PointSearching pointSearching, Model model){
+		Map<String, Object> map = pointService.sellHistorySearch(page, pointSearching);
+		model.addAttribute("list",map.get("list"));
+		model.addAttribute("paging",map.get("paging"));
+		return "point/buy_history";
+	}
+	//관리자가 모든 회원들의 충,환내역 검색
+	@RequestMapping(value="crHistorySearch", method=RequestMethod.POST)
+	public String crHistorySearch(@RequestParam(value="page",defaultValue="1") int page, PointSearching pointSearching, Model model){
+//		System.out.println(pointSearching);
+		Map<String, Object> map = pointService.crHistorySearch(page, pointSearching);
+		model.addAttribute("list",map.get("list"));
+		model.addAttribute("paging",map.get("paging"));
+		return "point/cr_history";
+	}
+	
+	//관리자가 환전요청 검색
+	@RequestMapping(value="refundRequestSearch", method=RequestMethod.POST)
+	public String refundRequestSearch(@RequestParam(value="page",defaultValue="1") int page, PointSearching pointSearching, Model model){
+//		System.out.println(pointSearching);
+		Map<String, Object> map = pointService.refundRequestSearch(page, pointSearching);
+		model.addAttribute("list",map.get("list"));
+		model.addAttribute("paging",map.get("paging"));
+		return "point/refund_request";
+	}
+}

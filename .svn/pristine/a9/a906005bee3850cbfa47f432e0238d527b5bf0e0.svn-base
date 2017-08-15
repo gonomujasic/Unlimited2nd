@@ -1,0 +1,126 @@
+package lee.chatting.dto;
+
+import org.springframework.beans.factory.config.ConfigurableBeanFactory;
+import org.springframework.context.annotation.Scope;
+import org.springframework.stereotype.Component;
+
+@Component
+@Scope(value=ConfigurableBeanFactory.SCOPE_PROTOTYPE)
+public class ChatRoomDTO {
+
+	private String mentorID;
+	private String menteeID;
+	private String mentorNick;
+	private String menteeNick;
+	private int chatRoomNum;
+	private String roomTitle;
+	private String nationality;
+	private String language;
+	private String studytime;
+	private String studypoint;
+	
+	public ChatRoomDTO() {
+	}
+
+	public ChatRoomDTO(String mentorID, String mentorNick, int chatRoomNum, String roomTitle, String nationality, String language, String studytime,
+			String studypoint) {
+		this.mentorID = mentorID;
+		this.mentorNick = mentorNick;
+		this.chatRoomNum = chatRoomNum;
+		this.roomTitle = roomTitle;
+		this.nationality = nationality;
+		this.language = language;
+		this.studytime = studytime;
+		this.studypoint = studypoint;
+	}
+
+	public String getMentorID() {
+		return mentorID;
+	}
+
+	public void setMentorID(String mentorID) {
+		this.mentorID = mentorID;
+	}
+
+	public String getMenteeID() {
+		return menteeID;
+	}
+
+	public void setMenteeID(String menteeID) {
+		this.menteeID = menteeID;
+	}
+
+	public String getMentorNick() {
+		return mentorNick;
+	}
+
+	public void setMentorNick(String mentorNick) {
+		this.mentorNick = mentorNick;
+	}
+
+	public String getMenteeNick() {
+		return menteeNick;
+	}
+
+	public void setMenteeNick(String menteeNick) {
+		this.menteeNick = menteeNick;
+	}
+
+	public int getChatRoomNum() {
+		return chatRoomNum;
+	}
+
+	public void setChatRoomNum(int chatRoomNum) {
+		this.chatRoomNum = chatRoomNum;
+	}
+
+	public String getRoomTitle() {
+		return roomTitle;
+	}
+
+	public void setRoomTitle(String roomTitle) {
+		this.roomTitle = roomTitle;
+	}
+
+	public String getNationality() {
+		return nationality;
+	}
+
+	public void setNationality(String nationality) {
+		this.nationality = nationality;
+	}
+
+	public String getLanguage() {
+		return language;
+	}
+
+	public void setLanguage(String language) {
+		this.language = language;
+	}
+
+	public String getStudytime() {
+		return studytime;
+	}
+
+	public void setStudytime(String studytime) {
+		this.studytime = studytime;
+	}
+
+	public String getStudypoint() {
+		return studypoint;
+	}
+
+	public void setStudypoint(String studypoint) {
+		this.studypoint = studypoint;
+	}
+
+
+	@Override
+	public String toString() {
+		return "ChatRoomDTO [chatRoomNum=" + chatRoomNum + ", roomTitle=" + roomTitle + ", nationality=" + nationality
+				+ ", language=" + language + ", studytime=" + studytime + ", studypoint=" + studypoint + "]";
+	}	
+		
+	
+	
+}
