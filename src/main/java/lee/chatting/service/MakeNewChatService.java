@@ -37,15 +37,14 @@ public class MakeNewChatService implements ChatService {
 
 	@Override
 	public Model execute(Model model, Object object) {
-		
+
 		HttpServletRequest request = (HttpServletRequest) object;
 		HttpSession session = request.getSession();
 
 		String mentorID = (String) session.getAttribute("id");
 		String mentorNick = (String) session.getAttribute("nickName");
 
-		
-		ChatRoomDTO chatRoomDTO = getChatRoom(); 
+		ChatRoomDTO chatRoomDTO = getChatRoom();
 		chatRoomDTO.setChatRoomNum(roomNumber);
 		chatRoomDTO.setLanguage(request.getParameter("language"));
 		chatRoomDTO.setMentorID(mentorID);

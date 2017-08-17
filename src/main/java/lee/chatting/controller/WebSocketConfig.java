@@ -14,29 +14,29 @@ import lee.chatting.dto.ChatRoomDTO;
 
 @Configuration
 @EnableWebSocketMessageBroker
-@ComponentScan(basePackages={"lee.chatting.*"})
-public class WebSocketConfig extends AbstractWebSocketMessageBrokerConfigurer{
+@ComponentScan(basePackages = { "lee.chatting.*" })
+public class WebSocketConfig extends AbstractWebSocketMessageBrokerConfigurer {
 
 	@Bean
-	public ArrayList<ChatRoomDTO> getChatRoomList(){
+	public ArrayList<ChatRoomDTO> getChatRoomList() {
 		return new ArrayList<ChatRoomDTO>();
 	}
-	
+
 	@Override
 	public void registerStompEndpoints(StompEndpointRegistry registry) {
-		//앤드포인트 지정
-		//cors 접근이 가능하게 해줌
-		//socketjs로 통신
+		// 앤드포인트 지정
+		// cors 접근이 가능하게 해줌
+		// socketjs로 통신
 		registry.addEndpoint("/chatEndpoint").withSockJS();
-		
+
 	}
-	
+
 	@Override
-	public void configureMessageBroker(MessageBrokerRegistry registry){
-		
+	public void configureMessageBroker(MessageBrokerRegistry registry) {
+
 		registry.enableSimpleBroker("/subscribe");
 		registry.setApplicationDestinationPrefixes("/app");
-		
+
 	}
 
 }

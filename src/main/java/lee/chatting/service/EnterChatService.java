@@ -16,25 +16,22 @@ public class EnterChatService {
 
 	@Autowired
 	private ArrayList<ChatRoomDTO> list;
-	
-	
+
 	public Model execute(Model model, Object object, String roomNumber) {
 		HttpServletRequest request = (HttpServletRequest) object;
 		HttpSession session = request.getSession();
 		int roomNum = Integer.parseInt(roomNumber);
-		for(ChatRoomDTO chatRoom:list){
-			
-			if(chatRoom.getChatRoomNum() == roomNum && chatRoom.getMenteeID() == null){
-								
-				chatRoom.setMenteeID((String)session.getAttribute("id"));
-				chatRoom.setMenteeNick((String)session.getAttribute("nickName"));
+		for (ChatRoomDTO chatRoom : list) {
+
+			if (chatRoom.getChatRoomNum() == roomNum && chatRoom.getMenteeID() == null) {
+
+				chatRoom.setMenteeID((String) session.getAttribute("id"));
+				chatRoom.setMenteeNick((String) session.getAttribute("nickName"));
 				model.addAttribute(chatRoom);
-					
+
 			}
 		}
 		return model;
 	}
 
-
-	
 }
